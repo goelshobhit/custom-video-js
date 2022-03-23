@@ -1,4 +1,5 @@
 import './App.css';
+import 'antd/dist/antd.css';
 import VideoPlayer from './VIdeoPlayer';
 
 function App() {

@@ -13,6 +13,5 @@ code {
 }
 
 .video-js {
-  width: 800px !important;
-  height: 400px !important;
+  width: 75vw !important;
 }
