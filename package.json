@@ -23,7 +23,6 @@
     "videojs-playlist": "^5.0.0",
     "videojs-playlist-ui": "^4.0.1",
     "videojs-qualityselector": "^0.0.4",
-    "videojs-react-enhanced": "^0.3.1",
     "videojs-resolution-switcher": "^0.4.2",
     "videojs-resolution-switcher-webpack": "^0.4.6",
     "videojs-seek-buttons": "^2.2.0",
