@@ -1,6 +1,6 @@
 import React from "react";
-import { List, Avatar, Modal } from 'antd';
-import { UnlockOutlined, LockOutlined } from '@ant-design/icons';
+import { List, Avatar, Modal } from "antd";
+import { UnlockOutlined, LockOutlined } from "@ant-design/icons";
 import videojs from "video.js";
 import VideoJS from "./Video"; // point to where the functional component is stored
 import "videojs-playlist";
@@ -10,12 +10,14 @@ import "videojs-seek-buttons/dist/videojs-seek-buttons.css";
 
 import "videojs-playlist";
 
-import playlistSrc from './playlist.json';
+import playlistSrc from "./playlist.json";
 
 var Button = videojs.getComponent("Button");
 
 const VideoPlayer = () => {
   const playerRef = React.useRef(null);
+  const modalRef = React.useRef(null);
+
   let timer = null,
     totalTime = 0;
   let time = new Date();
@@ -36,7 +38,7 @@ const VideoPlayer = () => {
       console.log("player is waiting");
     });
 
-    player.playlist(playlistSrc);
+    player.playlist(playlistSrc.filter((item) => item.is_free));
     // Play through the playlist automatically.
     player.playlist.autoadvance(5);
 
@@ -95,10 +97,39 @@ const VideoPlayer = () => {
 
     player.on("play", startPlaying);
     player.on("pause", pausePlaying);
+    player.on("error", handleOnError);
+
+    var ModalDialog = videojs.getComponent("ModalDialog");
+
+    var modal = new ModalDialog(player, {
+      //  content:'test content',
+      temporary: false,
+      description: "description",
+      label: "test",
+      //closeable:true
+    });
+
+    modalRef.current = modal;
+
+    player.addChild(modal);
+
+    modal.on("beforemodalfill", function () {
+      console.log("beforemodalfill");
+    });
+    modal.on("modalclose", function () {
+      console.log("modalclose");
+    });
+    modal.on("modalopen", function () {
+      console.log("modalopen");
+    });
+    modal.on("beforemodalopen", function () {
+      console.log("beforemodalopen");
+    });
     // player.controlBar.addChild('QualitySelector');
   };
 
   function startPlaying() {
+    playerRef.current.loadingSpinner.show()
     timer = window.setInterval(function () {
       totalTime += new Date().getTime() - time.getTime();
     }, 10);
@@ -113,48 +144,67 @@ const VideoPlayer = () => {
 
   function handleOnClick(data) {
     const selectedItem = data.sources[0];
-    if(!data.is_free){
+    if (!data.is_free) {
       playerRef.current.pause();
-      Modal.info({
-        title: data.title,
-        content: (
-          <div>
-            <p>Buy</p>
-          </div>
-        ),
-        onOk() {},
-      })
+      modalRef.current.open();
+      modalRef.current.contentEl().innerHTML = `
+      <div class='modal' style="height:100%;display: flex;flex-direction: column;align-items: center;justify-content: center;">
+        <h1 style="color:white">${data.title}</h1>
+        <button style="color:red"> Buy </button>
+      </div>
+    `;
     } else {
-        playerRef.current.src({ src: selectedItem.src, type: selectedItem.type });
+      playerRef.current.src({ src: selectedItem.src, type: selectedItem.type });
     }
   }
 
+  function handleOnError() {
+    modalRef.current.open();
+    modalRef.current.contentEl().innerHTML = `
+    <div class='modal' style="height:100%;display: flex;flex-direction: column;align-items: center;justify-content: center;">
+      <h1 style="color:white">Unable to play media</h1>
+    </div>
+  `;
+  }
+
   return (
-    <div style={{ display: 'flex', flexDirection:'row', flexWrap:'wrap', width:'100%'}}>
-      <VideoJS options={videoJsOptions} onReady={handlePlayerReady} />
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "wrap",
+        width: "100%",
+      }}
+    >
+      <VideoJS
+        options={videoJsOptions}
+        onReady={handlePlayerReady}
+        onError={handleOnError}
+      />
       <List
-      style={{ width:'25vw'}}
-    itemLayout="horizontal"
-    dataSource={playlistSrc}
-    pagination={{
-      pageSize: 10,
-    }}
-    renderItem={item => (
-      <List.Item onClick={() => handleOnClick(item)}>
-        <List.Item.Meta
-          avatar={<Avatar src={item.poster} />}
-          title={item.title}
-          description={<div>
-            {item.is_free ? <UnlockOutlined /> :  <LockOutlined />} {item.description}
-          </div>}
-        />
-      </List.Item>
-    )}
-  />
+        style={{ width: "25vw" }}
+        itemLayout="horizontal"
+        dataSource={playlistSrc}
+        pagination={{
+          pageSize: 10,
+        }}
+        renderItem={(item) => (
+          <List.Item onClick={() => handleOnClick(item)}>
+            <List.Item.Meta
+              avatar={<Avatar src={item.poster} />}
+              title={item.title}
+              description={
+                <div>
+                  {item.is_free ? <UnlockOutlined /> : <LockOutlined />}{" "}
+                  {item.description}
+                </div>
+              }
+            />
+          </List.Item>
+        )}
+      />
     </div>
   );
 };
-
-
 
 export default VideoPlayer;
