@@ -62,7 +62,12 @@ const VideoPlayer = () => {
       },
 
       handleClick: function (props) {
-        player.playlist.next();
+        player.addClass('vjs-waiting')
+        player.pause();
+        setTimeout(() => {
+          player.removeClass('vjs-waiting')
+          player.playlist.next();
+        }, 5000);
       },
     });
 
@@ -98,6 +103,13 @@ const VideoPlayer = () => {
     player.on("play", startPlaying);
     player.on("pause", pausePlaying);
     player.on("error", handleOnError);
+    player.on("ended", () => {
+      player.addClass('vjs-waiting')
+      setTimeout(() => {
+        player.removeClass('vjs-waiting')
+        player.playlist.next();
+      }, 5000);
+    });
 
     var ModalDialog = videojs.getComponent("ModalDialog");
 
@@ -129,14 +141,12 @@ const VideoPlayer = () => {
   };
 
   function startPlaying() {
-    playerRef.current.loadingSpinner.show()
     timer = window.setInterval(function () {
       totalTime += new Date().getTime() - time.getTime();
     }, 10);
   }
 
   function pausePlaying() {
-    console.log(totalTime);
     if (timer) clearInterval(timer);
   }
 
